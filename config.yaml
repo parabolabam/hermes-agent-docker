@@ -7,7 +7,7 @@ fallback_providers:
 - provider: anthropic
   model: claude-sonnet-4-6
 - provider: copilot
-  model: gpt-5.1-codex-max
+  model: claude-sonnet-4.6
 credential_pool_strategies:
   copilot: fill_first
   openai-codex: fill_first
