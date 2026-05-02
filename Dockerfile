@@ -4,8 +4,14 @@ RUN uv pip install --python /opt/hermes/.venv/bin/python3 pip
 RUN uv pip install --python /opt/hermes/.venv/bin/python3 \
   https://github.com/KittenML/KittenTTS/releases/download/0.8.1/kittentts-0.8.1-py3-none-any.whl \
   soundfile
-# Install RTK (Rust Token Killer) — token-efficient CLI proxy for Linux arm64
-RUN curl -fsSL https://github.com/rtk-ai/rtk/releases/download/v0.38.0/rtk-aarch64-unknown-linux-gnu.tar.gz \
+# Install RTK (Rust Token Killer) — pick the right binary for the build arch
+RUN arch="$(uname -m)"; \
+    case "$arch" in \
+      aarch64) rtk_arch="aarch64-unknown-linux-gnu" ;; \
+      x86_64)  rtk_arch="x86_64-unknown-linux-musl" ;; \
+      *)        echo "Unsupported arch: $arch" && exit 1 ;; \
+    esac; \
+    curl -fsSL "https://github.com/rtk-ai/rtk/releases/download/v0.38.0/rtk-${rtk_arch}.tar.gz" \
       | tar -xz -C /tmp \
     && install -m755 /tmp/rtk /usr/local/bin/rtk \
     && rm -f /tmp/rtk
