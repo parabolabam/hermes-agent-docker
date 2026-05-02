@@ -1,0 +1,13 @@
+services:
+  hermes:
+    image: hermes-agent-local:latest
+    container_name: hermes-agent
+    restart: unless-stopped
+    command: gateway run
+    environment:
+      HOME: /opt/data/home
+    shm_size: 1g
+    ports:
+      - "127.0.0.1:8642:8642"
+    volumes:
+      - ${HERMES_DATA_DIR:-./data}:/opt/data
