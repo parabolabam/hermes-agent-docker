@@ -1,9 +1,13 @@
 services:
   hermes:
+    build: .
     image: hermes-agent-local:latest
     container_name: hermes-agent
     restart: unless-stopped
     command: gateway run
+    env_file:
+      - path: .env
+        required: false
     environment:
       HOME: /opt/data/home
     shm_size: 1g

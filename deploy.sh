@@ -2,20 +2,36 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-IMAGE="hermes-agent-local:latest"
+DATA_DIR="${HERMES_DATA_DIR:-$SCRIPT_DIR/data}"
 COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 
-echo "==> Building $IMAGE"
-docker build -t "$IMAGE" "$SCRIPT_DIR"
+# Compose shim: prefer v2 plugin, fall back to standalone v1
+compose() {
+  if docker compose version >/dev/null 2>&1; then
+    docker compose "$@"
+  else
+    docker-compose "$@"
+  fi
+}
 
-echo "==> Restarting container"
-# Support both docker compose v2 (plugin) and docker-compose v1 (standalone)
-if docker compose version >/dev/null 2>&1; then
-  docker compose -f "$COMPOSE_FILE" up -d --force-recreate
-else
-  docker-compose -f "$COMPOSE_FILE" up -d --force-recreate
+# ── First-run: initialize data directory ────────────────────────────────────
+if [ ! -f "$DATA_DIR/config.yaml" ]; then
+  echo "==> Initializing data directory: $DATA_DIR"
+  mkdir -p "$DATA_DIR"
+  cp "$SCRIPT_DIR/config.yaml" "$DATA_DIR/config.yaml"
+  echo "    config.yaml copied."
+  echo "    Run 'docker exec -it hermes-agent hermes auth' after startup to set up credentials."
 fi
 
+# ── Build ────────────────────────────────────────────────────────────────────
+echo "==> Building image"
+compose -f "$COMPOSE_FILE" build
+
+# ── Start (or restart) ───────────────────────────────────────────────────────
+echo "==> Starting container"
+compose -f "$COMPOSE_FILE" up -d --force-recreate
+
+# ── Verify ───────────────────────────────────────────────────────────────────
 echo "==> Verifying"
 docker exec hermes-agent rtk --version
-echo "Done."
+echo "Done. Gateway listening on 127.0.0.1:8642"
