@@ -73,7 +73,8 @@ terminal:
   cwd: .
   timeout: 180
   env_passthrough: []
-  shell_init_files: []
+  shell_init_files:
+  - /opt/rtk/shell-init.sh
   auto_source_bashrc: true
   docker_image: hermes-agent-local:latest
   docker_forward_env: []
